@@ -88,10 +88,6 @@
   .pro strong{color:#15803d;display:block;margin-bottom:4px;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;}
   .pro p{color:#14532d;margin:0;font-size:13px;}
 
-  .interview{background:#faf5ff;border:1px solid #ddd6fe;border-left:4px solid var(--plum);border-radius:8px;padding:14px 18px;margin:14px 0;font-size:13px;}
-  .interview strong{color:var(--plum);display:block;margin-bottom:4px;text-transform:uppercase;font-size:11px;letter-spacing:0.5px;}
-  .interview p{color:#4c1d95;margin:0;font-size:13px;}
-
   /* Table */
   table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;}
   th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:700;font-size:12px;}
@@ -226,14 +222,13 @@
     <a href="#perf">Performance debugging</a>
     <a href="#cost">Cost monitoring</a>
     <a href="#dr">Disaster recovery</a>
-    <a class="priority" href="#interview">Interview talk track</a>
   </aside>
 
   <main class="main">
 
   <div class="sect-nav">
     <span class="now">📍 Production-Grade RAG + MCP — Design Guide</span>
-    <span><a href="#overview">Start at overview ↓</a> · <a href="#interview">Jump to interview talk track →</a></span>
+    <span><a href="#overview">Start at overview ↓</a> · <a href="#issues">Jump to production issues →</a></span>
   </div>
 
   <!-- OVERVIEW -->
@@ -756,7 +751,7 @@
 
     <div class="why">
       <strong>Why see all five together</strong>
-      <p>Every interview question about "how would you build a production RAG?" is really asking about ONE of these five pipelines. Most candidates only describe pipeline ③ (the request flow). The seniors describe all five — and crucially, how feedback (⑤) closes the loop back into eval (①).</p>
+      <p>Every "how would you build a production RAG?" conversation is really asking about ONE of these five pipelines. Most discussions only cover pipeline ③ (the request flow). A complete view covers all five — and crucially, how feedback (⑤) closes the loop back into eval (①).</p>
     </div>
 
     <h3>Pipeline ① · Code → Production (CI/CD detail)</h3>
@@ -1197,7 +1192,7 @@ Developer pushes branch
       <div class="stage-num">4</div>
       <div class="stage-title">
         <h2>Change Detection — How We Know What to Re-index</h2>
-        <div class="subtitle">The single most-asked interview question for production RAG.</div>
+        <div class="subtitle">The pattern every production RAG team has to get right.</div>
       </div>
     </div>
 
@@ -1241,10 +1236,6 @@ Developer pushes branch
       <p>Source-modified is cheap (a metadata call), but Confluence sometimes touches <code>lastmodified</code> on edits that don't change content (e.g., label changes). Hash catches those false positives — saves the embedding bill. Embedding-model version is the third gate because when you upgrade from text-embedding-3-small to large, every chunk needs re-embedding even if content is identical.</p>
     </div>
 
-    <div class="interview">
-      <strong>Interview talk track</strong>
-      <p>"My change detection has three layers: source-side timestamp filters which docs to fetch, sha256 of normalized content decides if we actually re-embed, and an embedding-model-version field forces full backfill if we change models. Deletes are handled by diffing the source's full ID list against my <code>doc_state</code> ledger nightly. This means our embedding bill scales with <em>real content changes</em>, not with how often Confluence flips a metadata field."</p>
-    </div>
   </div>
 
   <!-- STAGE 5: CHUNKING -->
@@ -1884,10 +1875,6 @@ Return as a JSON list of strings."""</span>
       <p>5–15% of real production queries are short/vague. If your system tries to retrieve and generate from them, you waste tokens AND give garbage answers. Both are user-trust killers. A 50-line classifier saves cost, latency, and reputation. Add it before you scale.</p>
     </div>
 
-    <div class="interview">
-      <strong>Interview frame</strong>
-      <p>"My RAG has three input layers — token count, information density, retrieval-quality probe. Empty queries get a polite ask. Short queries get rewritten using conversation history. Vague queries get clarification options as buttons. Junk queries fall through to a low-retrieval-score 'I don't know' rather than confidently hallucinated nonsense. This is the cheapest reliability win in production RAG."</p>
-    </div>
   </div>
 
   <!-- CONVERSATION MEMORY -->
@@ -2474,10 +2461,6 @@ jobs:
           DATABASE_URL:   postgresql://postgres:pw@localhost/test
 </code></pre>
 
-    <div class="interview">
-      <strong>Interview talk track</strong>
-      <p>"Every PR runs RAGAS against a 200-question golden set with hard thresholds: faithfulness 0.85, answer relevancy 0.80, context precision 0.75, context recall 0.80. If any metric drops below threshold the build fails. We catch retrieval regressions before merge — same discipline as unit tests."</p>
-    </div>
   </div>
 
   <!-- STAGE 13: FINE TUNE SIGNALS -->
@@ -2771,10 +2754,6 @@ jobs:
       <p>If your RAG is failing, exactly one (or two) of these edges is broken. <em>Context Relevance low</em> = retrieval problem. <em>Groundedness low</em> = generation hallucinating beyond the context. <em>Answer Relevance low</em> = generation drifting off-topic. You almost never have all three failing at once — and pinpointing which edge is broken tells you exactly where to invest engineering effort.</p>
     </div>
 
-    <div class="interview">
-      <strong>Use this in interviews</strong>
-      <p>"I evaluate every RAG change against the RAG Triad: Context Relevance, Groundedness, Answer Relevance. Each metric maps to a different layer of the system, so a regression on any one tells me exactly where to look. Faithfulness drops? It's the prompt or the model. Context recall drops? It's the chunker or the embeddings. That's how I keep eval actionable instead of vibes-based."</p>
-    </div>
   </div>
 
   <!-- METRIC DEEP DIVE -->
@@ -3415,10 +3394,6 @@ jobs:
       <p>Filter selectivity changes which approach wins. <em>Selective filter</em> (1% of corpus) → pre-filter wins. <em>Loose filter</em> (60%+) → over-fetch + post-filter wins. <em>Unknown selectivity</em> → over-fetch with high ef_search and filter inside the SQL is the safe default. Always measure with EXPLAIN; don't guess.</p>
     </div>
 
-    <div class="interview">
-      <strong>Use this in interviews</strong>
-      <p>"Metadata filtering is where most enterprise RAGs differentiate from demos. Multi-tenant scoping is enforced from auth, never from the query — that's a security-bug class. Hot filter dimensions are typed columns with composite indexes; the long tail stays in JSONB. For pgvector specifically, I bump <code>hnsw.ef_search</code> when filters are selective and use partial HNSW indexes for the top filter combos. <code>EXPLAIN ANALYZE</code> tells me when over-fetch isn't enough."</p>
-    </div>
   </div>
 
   <!-- QUERY REWRITING -->
@@ -3536,10 +3511,6 @@ JSON:"""</span>
       </tr>
     </table>
 
-    <div class="interview">
-      <strong>Use this in interviews</strong>
-      <p>"My debugging starts with the metric that dropped. Faithfulness drop → I look at the prompt, retrieval quality, model. Context recall drop → embeddings or chunking. Each metric maps to a specific layer to investigate. I never just say 'the RAG is bad' — I always have a one-line hypothesis backed by a metric."</p>
-    </div>
   </div>
 
   <!-- IMPROVEMENT LOOP -->
@@ -3619,10 +3590,6 @@ JSON:"""</span>
                 <span class="fn">f</span><span class="str">"DRIFT: {metric} dropped {delta:.2f} (recent {recent[metric]:.2f} vs baseline {baseline[metric]:.2f})"</span>
             )</code></pre>
 
-    <div class="interview">
-      <strong>Senior framing</strong>
-      <p>"I treat drift like SLO breaches in regular SRE work — they're inevitable, the question is whether I detect them in days or in months. Three drift detectors run nightly: query drift compares online vs offline RAGAS, corpus drift watches the sync ledger, model drift compares faithfulness on a fixed canary set. The 'compare same prompt + context, different week' canary is the one most teams skip — it's how you catch silent model rollouts from your provider."</p>
-    </div>
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════
@@ -4418,10 +4385,6 @@ system: |
       <li>☐ Canary watch schedule (who's watching for first 30 min after promotion)</li>
     </ul>
 
-    <div class="interview">
-      <strong>Senior framing</strong>
-      <p>"My deployment story is: backward-compatible migration → canary 5% with auto-rollback on SLO breach → 50% if RAGAS canary stays green for an hour → 100% with a kill-switch flag I can flip from Redis without redeploying. Workers scale on Redis queue depth via KEDA; API scales on RPS-per-pod. Every secret comes from AWS Secrets Manager via External Secrets Operator. The release is 10x more boring than the design discussion, which is exactly how it should be."</p>
-    </div>
   </div>
 
   <!-- PRODUCTION ISSUES ENCYCLOPEDIA -->
@@ -4814,10 +4777,6 @@ nodeSelector:
       <li><strong>Recent corpus change?</strong> Diff <code>doc_state</code> over last 24h; bulk delete? failed sync?</li>
     </ol>
 
-    <div class="interview">
-      <strong>Senior framing</strong>
-      <p>"Every issue I've debugged in production RAG falls into one of these 20 patterns. The skill isn't memorizing fixes — it's having the diagnostic discipline to triage in 5 minutes instead of staring at logs for an hour. My runbook starts with Grafana → LangSmith trace → kubectl. Three commands narrow the problem to one of: infra, retrieval, generation, or upstream provider. From there it's specific."</p>
-    </div>
   </div>
 
   <!-- PERF DEBUGGING -->
@@ -4889,23 +4848,6 @@ nodeSelector:
     </ul>
   </div>
 
-  <!-- INTERVIEW -->
-  <div class="sect" id="interview">
-    <h2><span class="icon">🎯</span>Interview Talk Track (60-second pitch)</h2>
-    <div class="interview">
-      <strong>The pitch</strong>
-      <p>"I built an enterprise knowledge assistant that combines two fundamentally different data patterns. Confluence pages and PDFs are RAG'd into pgvector with hybrid retrieval — single Postgres query running BM25, dense, and RRF in one CTE. Live business numbers — quarterly revenue, KPIs, ticket counts — are NEVER embedded; they're queried at request time via an MCP server with typed tools. A LangGraph orchestrator routes each query to RAG, MCP, or both in parallel. Change detection has three layers: source timestamp filters what to fetch, sha256 of normalized content decides what to actually re-embed, and an embedding-model-version field forces full backfill on model upgrades. Safety stack is layered — Presidio for PII, Llama Guard 3 1B for input/output filtering, citation forcing in the system prompt. RAGAS runs in CI as a hard gate — faithfulness 0.85 minimum or the build fails. Prometheus/Grafana for metrics, LangSmith for trace replay, PagerDuty for alerts. Cost runs about $0.002 per RAG query and $0.005 when MCP joins in. The senior design call was treating live data and document data as fundamentally different problems — embedding revenue numbers is the most common enterprise RAG mistake, and MCP is the right answer."</p>
-    </div>
-
-    <h3>Common follow-ups they'll ask</h3>
-    <ul>
-      <li><strong>"How do you know if your sync is broken?"</strong> → "Corpus-chunks gauge unchanged for 3 hours pages on-call. RAGAS canary every night catches retrieval regressions."</li>
-      <li><strong>"What if Confluence has 1M pages?"</strong> → "Sync is incremental — only changed docs hit embeddings. Initial backfill is parallelized across worker pool. pgvector HNSW handles 10M+ chunks comfortably."</li>
-      <li><strong>"What stops a malicious user from extracting another tenant's data?"</strong> → "Tenant isolation in <code>kb_chunks</code> via a <code>tenant_id</code> column on every chunk + WHERE clause in every retrieval. MCP server scopes by user JWT. Presidio strips PII regardless."</li>
-      <li><strong>"How would you scale this 10×?"</strong> → "Read replicas of Postgres for retrieval reads. Batch API for non-realtime ingest jobs (50% off embeddings). Self-hosted embedding model (BGE) once volume justifies. SGLang or vLLM for self-hosted generation if API costs cross break-even."</li>
-      <li><strong>"What's the next thing you'd add?"</strong> → "Cross-encoder reranker (BAAI/bge-reranker-v2-m3) on the top-20 from hybrid search — faithfulness lift of 3-5 points typically. Then RAPTOR-style hierarchical summaries for thematic queries that span many docs."</li>
-    </ul>
-  </div>
 
   </main>
 </div>
